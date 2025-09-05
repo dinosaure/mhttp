@@ -1,3 +1,4 @@
 (library
  (name mhttp)
+ (public_name mhttp)
  (libraries h1 h2 mkernel mnet httpcats.runtime))
