@@ -1,5 +1,14 @@
 open Http_mnet
 
+let peer ~secure =
+  let scheme = if secure then "https" else "http" in
+  let pp ppf (ipaddr, port) =
+    Fmt.pf ppf "%s%a:%d" scheme Ipaddr.pp ipaddr port
+  in
+  Logs.Tag.def ~doc:"HTTPcats (unikernel) peer" "httpcats.peer" pp
+
+let clear_peer = peer ~secure:false
+
 module TCP_and_H1 = struct
   include TCP
 
@@ -69,11 +78,12 @@ let http_1_1_server_connection ~config ~user's_error_handler ?upgrade
   in
   let finally () = Mnet.TCPv4.close flow in
   Fun.protect ~finally @@ fun () ->
-  let src =
+  let tags =
     let (ipaddr, port), _ = Mnet.TCPv4.peers flow in
-    Logs.Src.create (Fmt.str "http:%a:%d" Ipaddr.pp ipaddr port)
+    let tags = Mnet.TCPv4.tags flow in
+    Logs.Tag.add clear_peer (ipaddr, port) tags
   in
-  Miou.await_exn (B.run conn ~src ~read_buffer_size ?upgrade flow)
+  Miou.await_exn (B.run conn ~tags ~read_buffer_size ?upgrade flow)
 
 let rec clean_up orphans =
   match Miou.care orphans with
@@ -167,7 +177,7 @@ let clear ?stop ?(config = H1.Config.default) ?ready
     | Some flow ->
         clean_up orphans;
         let _ =
-          Miou.async @@ fun () ->
+          Miou.async ~orphans @@ fun () ->
           http_1_1_server_connection ~config ~user's_error_handler ?upgrade
             ~user's_handler flow
         in
