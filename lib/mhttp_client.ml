@@ -421,7 +421,7 @@ let req_from_h2 req =
   ; headers= req.H2.Request.headers
   }
 
-let connect ?port ?tls_config ~happy_eyeballs host =
+let connect ?port ?tls_config ~happy_eyeballs:he host =
   let port =
     match (port, tls_config) with
     | None, None -> 80
@@ -429,10 +429,10 @@ let connect ?port ?tls_config ~happy_eyeballs host =
     | Some port, _ -> port
   in
   Log.debug (fun m -> m "try to connect to %s (with happy-eyeballs)" host);
-  match
-    (Mnet_happy_eyeballs.connect happy_eyeballs host [ port ], tls_config)
-  with
+  let kind = Mnet.TCP.direct in
+  match (Mnet_happy_eyeballs.connect ~kind he host [ port ], tls_config) with
   | Ok ((ipaddr, port), file_descr), None ->
+      let file_descr = Mnet.TCP.unsafe_to_bufferize 0x800 file_descr in
       Ok (`Tcp file_descr, ipaddr, port, None)
   | Ok ((ipaddr, port), file_descr), Some tls_config ->
       let tls = Mnet_tls.client_of_fd tls_config file_descr in

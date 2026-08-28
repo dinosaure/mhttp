@@ -11,6 +11,7 @@ depends: [
   "dune" {>= "2.7.0"}
   "mnet"
   "mnet-tls"
+  "mkernel" {>= "0.0.4"}
   "mirage-crypto-rng"
   "httpcats" {>= "0.3.0"}
 ]
@@ -21,3 +22,8 @@ build: [
 ]
 
 synopsis: "An implementation of HTTP in OCaml for unikernels"
+pin-depends: [
+  [ "mnet.dev" "git+https://git.robur.coop/robur/mnet.git#eae0968f0abfbe545c7034ee3df55d4f4bfa6b14" ]
+  [ "mnet-tls.dev" "git+https://git.robur.coop/robur/mnet.git#eae0968f0abfbe545c7034ee3df55d4f4bfa6b14" ]
+  [ "mnet-happy-eyeballs.dev" "git+https://git.robur.coop/robur/mnet.git#eae0968f0abfbe545c7034ee3df55d4f4bfa6b14" ]
+]
