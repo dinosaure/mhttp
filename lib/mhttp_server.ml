@@ -59,7 +59,7 @@ let pp_error ppf = function
 module Method = H2.Method
 module Headers = H2.Headers
 
-type flow = [ `Tcp of Mnet.TCP.flow | `Tls of Mnet_tls.t ]
+type flow = [ `Tcp of Mnet.TCP.buffer Mnet.TCP.flow | `Tls of Mnet_tls.t ]
 
 type request = {
     meth: Method.t
@@ -203,12 +203,12 @@ let switch { mutex; condition; flag } =
   Atomic.set flag true;
   Miou.Condition.broadcast condition
 
-let accept_or_stop ?stop tcpv4 listen =
+let accept_or_stop ?stop ~kind tcpv4 listen =
   match stop with
-  | None -> Some (Mnet.TCP.accept tcpv4 listen)
+  | None -> Some (Mnet.TCP.accept ~kind tcpv4 listen)
   | Some s when Atomic.get s.flag -> None
   | Some s -> begin
-      let accept = Miou.async @@ fun () -> Mnet.TCP.accept tcpv4 listen in
+      let accept = Miou.async @@ fun () -> Mnet.TCP.accept tcpv4 ~kind listen in
       let stop = Miou.async (wait s) in
       match Miou.await_first [ accept; stop ] with
       | Ok flow when Atomic.get s.flag -> Mnet.TCP.close flow; None
@@ -256,11 +256,11 @@ let default_error_handler version ?request:_ err respond =
       in
       H2.Body.Writer.flush body fn
 
-let clear ?stop ?(config = H1.Config.default) ?ready
-    ?error_handler:(user's_error_handler = default_error_handler) ?upgrade
-    ~handler:user's_handler tcp ~port =
+let clear ?(kind = Mnet.TCP.buffer 0x800) ?stop ?(config = H1.Config.default)
+    ?ready ?error_handler:(user's_error_handler = default_error_handler)
+    ?upgrade ~handler:user's_handler tcp ~port =
   let rec go orphans listen =
-    match accept_or_stop ?stop tcp listen with
+    match accept_or_stop ~kind ?stop tcp listen with
     | None ->
         Log.debug (fun m -> m "stop the server");
         (* TODO(dinosaure): unlisten? *)
@@ -287,7 +287,8 @@ let with_tls ?stop ?(config = `Both (H1.Config.default, H2.Config.default))
     ?ready ?error_handler:(user's_error_handler = default_error_handler)
     tls_config ?upgrade ~handler:user's_handler tcp ~port =
   let rec go orphans listen =
-    match accept_or_stop ?stop tcp listen with
+    let kind = Mnet.TCP.direct in
+    match accept_or_stop ~kind ?stop tcp listen with
     | None -> Runtime.terminate orphans
     | Some flow ->
         clean_up orphans;

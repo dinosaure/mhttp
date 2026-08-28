@@ -5,9 +5,9 @@ module Log = (val Logs.src_log src : Logs.LOG)
 external reraise : exn -> 'a = "%reraise"
 
 module TCP = struct
-  type t = Mnet.TCP.flow
+  type t = Mnet.TCP.buffer Mnet.TCP.flow
 
-  let read = Mnet.TCP.read
+  let read = Mnet.TCP.input
 
   let write flow ?(off = 0) ?len str =
     (* NOTE(dinosaure): There is an important subtlety here that needs to be
