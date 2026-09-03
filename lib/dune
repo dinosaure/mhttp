@@ -20,4 +20,4 @@
  (name mhttp)
  (modules mhttp)
  (public_name mhttp)
- (libraries h1 h2 mkernel mnet mnet-tls httpcats.runtime))
+ (libraries bstr faraday h1 h2 mkernel mnet mnet-tls httpcats.runtime))
