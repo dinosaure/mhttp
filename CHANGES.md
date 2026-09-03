@@ -1,3 +1,7 @@
+### v0.0.3 (2026-09-03)
+
+- Upgrade to `httpcats.0.3.2` and `mnet.0.0.6` (@dinosaure, #6, #7)
+
 ### v0.0.2 (2026-05-06)
 
 - Improve our `mhttp` implementation with the new version of `mnet` and
