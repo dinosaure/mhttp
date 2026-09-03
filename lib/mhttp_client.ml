@@ -147,7 +147,7 @@ module Client = struct
           H1.Client_connection.request ~config request ~error_handler
             ~response_handler
         in
-        let prm = A.run conn ~read_buffer_size flow in
+        let prm = A.run conn ~read_buffer_size (TLS.make flow) in
         Process { version= V1; acc; response; body; conn; process= prm }
     | `Tcp flow, `V1 config, `V1 request ->
         let read_buffer_size = config.H1.Config.read_buffer_size in
@@ -182,7 +182,7 @@ module Client = struct
           H2.Client_connection.request conn ~error_handler ~response_handler
             request
         in
-        let prm = C.run conn ~read_buffer_size flow in
+        let prm = C.run conn ~read_buffer_size (TLS.make flow) in
         Process { version= V2; acc; response; body; conn; process= prm }
     | `Tcp flow, `V2 config, `V2 request ->
         let read_buffer_size = config.H2.Config.read_buffer_size in

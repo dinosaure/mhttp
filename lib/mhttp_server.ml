@@ -35,6 +35,8 @@ module A = Runtime.Make (TLS) (H1.Server_connection)
 module B = Runtime.Make (TCP_and_H1) (H1.Server_connection)
 module C = Runtime.Make (TLS) (H2_Server_connection)
 
+let tls_upgrade upgrade = Option.map (fun fn flow -> fn (TLS.prj flow)) upgrade
+
 type error =
   [ `V1 of H1.Server_connection.error
   | `V2 of H2.Server_connection.error
@@ -140,7 +142,8 @@ let https_1_1_server_connection ~config ~user's_error_handler ?upgrade
   let finally = inhibit Mnet_tls.close in
   let res = Miou.Ownership.create ~finally flow in
   Miou.Ownership.own res;
-  Miou.await_exn (A.run conn ~tags ~read_buffer_size ?upgrade flow);
+  let upgrade = tls_upgrade upgrade in
+  Miou.await_exn (A.run conn ~tags ~read_buffer_size ?upgrade (TLS.make flow));
   Miou.Ownership.release res
 
 let h2s_server_connection ~config ~user's_error_handler ?upgrade ~user's_handler
@@ -165,7 +168,8 @@ let h2s_server_connection ~config ~user's_error_handler ?upgrade ~user's_handler
   let finally = inhibit Mnet_tls.close in
   let res = Miou.Ownership.create ~finally flow in
   Miou.Ownership.own res;
-  Miou.await_exn (C.run conn ~tags ~read_buffer_size ?upgrade flow);
+  let upgrade = tls_upgrade upgrade in
+  Miou.await_exn (C.run conn ~tags ~read_buffer_size ?upgrade (TLS.make flow));
   Miou.Ownership.release res
 
 let rec clean_up orphans =

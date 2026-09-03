@@ -21,8 +21,3 @@ build: [
 ]
 
 synopsis: "An implementation of HTTP client in OCaml for unikernels"
-pin-depends: [
-  [ "mnet.dev" "git+https://git.robur.coop/robur/mnet.git#eae0968f0abfbe545c7034ee3df55d4f4bfa6b14" ]
-  [ "mnet-tls.dev" "git+https://git.robur.coop/robur/mnet.git#eae0968f0abfbe545c7034ee3df55d4f4bfa6b14" ]
-  [ "mnet-happy-eyeballs.dev" "git+https://git.robur.coop/robur/mnet.git#eae0968f0abfbe545c7034ee3df55d4f4bfa6b14" ]
-]
