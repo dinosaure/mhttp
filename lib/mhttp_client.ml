@@ -37,7 +37,13 @@ module Client = struct
            | `Upgrade ])
   end
 
-  module A = Runtime.Make (TLS) (H1_Client_connection)
+  module TLS_and_H1 = struct
+    include TLS
+
+    let shutdown flow = function `write -> () | cmd -> shutdown flow cmd
+  end
+
+  module A = Runtime.Make (TLS_and_H1) (H1_Client_connection)
   module B = Runtime.Make (TCP) (H1_Client_connection)
   module C = Runtime.Make (TLS) (H2_Client_connection)
   module D = Runtime.Make (TCP) (H2_Client_connection)
