@@ -432,7 +432,11 @@ let connect ?port ?tls_config ~happy_eyeballs:he host =
   let kind = Mnet.TCP.direct in
   match (Mnet_happy_eyeballs.connect ~kind he host [ port ], tls_config) with
   | Ok ((ipaddr, port), file_descr), None ->
-      let file_descr = Mnet.TCP.unsafe_to_bufferize 0x800 file_descr in
+      (* NOTE(dinosaure): if we look into [utcp], [rcvq] is capped at
+         [rcvbufsize], which is equal to [66976]. The safest limit is [0x20000]
+         ([to_power_of_two 66976]. *)
+      let limit = Some 0x20000 in
+      let file_descr = Mnet.TCP.unsafe_to_bufferize ~limit 0x800 file_descr in
       Ok (`Tcp file_descr, ipaddr, port, None)
   | Ok ((ipaddr, port), file_descr), Some tls_config ->
       let tls = Mnet_tls.client_of_fd tls_config file_descr in

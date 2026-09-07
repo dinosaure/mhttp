@@ -260,9 +260,13 @@ let default_error_handler version ?request:_ err respond =
       in
       H2.Body.Writer.flush body fn
 
-let clear ?(kind = Mnet.TCP.buffer 0x800) ?stop ?(config = H1.Config.default)
-    ?ready ?error_handler:(user's_error_handler = default_error_handler)
-    ?upgrade ~handler:user's_handler tcp ~port =
+let limit = Some 0x20000
+(* NOTE(dinosaure): see the client part and why it's safe to have such limit. *)
+
+let clear ?(kind = Mnet.TCP.buffer ~limit 0x800) ?stop
+    ?(config = H1.Config.default) ?ready
+    ?error_handler:(user's_error_handler = default_error_handler) ?upgrade
+    ~handler:user's_handler tcp ~port =
   let rec go orphans listen =
     match accept_or_stop ~kind ?stop tcp listen with
     | None ->
